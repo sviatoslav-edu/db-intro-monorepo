@@ -54,9 +54,11 @@ _Інтернет магазин ігор (альтернатива Steam)_
 <img width="689" height="947" alt="image" src="https://github.com/user-attachments/assets/caf4fbf6-a26d-4bc0-b799-6ce84b39cc1b" />
 
 <details>
-  ```
   <summary>PlantUML</summary>
-  @startuml
+
+```plantuml
+
+@startuml
 skinparam linetype polyline
 
 
@@ -174,7 +176,9 @@ signature }o--|| profile : "profile_id"
 achievement }o--|| game : "game_id"
 achievement }o--|| profile
 @enduml
+
 ```
+
 </details>
 
 _Примітка: Зв'язки __багато до багатьох__ у діаграмі не мають проміжних таблиць, однак при реалізації БД - обов'язкові_
