@@ -6,7 +6,7 @@ _Інтернет магазин ігор (альтернатива Steam)_
 
 ## Сутності
 
-Кожен __Primary Key__(id) матиме тип `BIGINT`. Це забезпечить стабільність індетифікаторів усіх сутностей, а також їх велику кількість. Індентифікатори різних сутностей між собою _не_ пов'язані. Тобто `/game?id=1984` ≠ `/profile?id=1984`.
+Кожен __Primary Key__(id) матиме тип `SERIAL`. Це забезпечить стабільність індетифікаторів усіх сутностей, а також їх велику кількість. Індентифікатори різних сутностей між собою _не_ пов'язані. Тобто `/game?id=1984` ≠ `/profile?id=1984`.
 
 ### `game`
 Гра. Має __одну(1)__ студію і __одне(1)__ видатництво. Можуть посилатися на один об'єкт. Має назву, і __декілька(багато)__ медія (скріншоти, трейлери). Має жанри(теги), опис, ціну і дату створення.
@@ -51,6 +51,130 @@ _Інтернет магазин ігор (альтернатива Steam)_
 
 ## ERD
 
-<img width="671" height="1013" alt="image" src="https://github.com/user-attachments/assets/1c505370-2a18-4e3a-a23d-9073a7300a70" />
+<img width="689" height="947" alt="image" src="https://github.com/user-attachments/assets/caf4fbf6-a26d-4bc0-b799-6ce84b39cc1b" />
+
+<details>
+  ```
+  <summary>PlantUML</summary>
+  @startuml
+skinparam linetype polyline
+
+
+hide circle
+
+entity "credential" as credential {
+  *id : PK
+  --
+  login
+  email
+  password_hash
+}
+
+entity "profile" as profile {
+  *id : PK
+  --
+  credential_id : FK
+  pfp_id : FK
+  name
+  about
+  created_date
+}
+
+entity "game" as game {
+  *id : PK
+  --
+  studio_id : FK
+  publisher_id : FK
+  title
+  description
+}
+
+entity "tag" as tag {
+  *id : PK
+  --
+  name
+}
+
+entity "media" as media {
+  *id : PK
+  --
+  data
+}
+
+entity "review" as review {
+  *id : PK
+  --
+  profile_id : FK
+  game_id : FK
+  recommend
+  words
+}
+
+entity "purchase" as purchase {
+  *id : PK
+  --
+  credential_id : FK
+  game_id : FK
+  price
+  created_date
+}
+
+entity "studio" as studio {
+  *id : PK
+  --
+  logo_id : FK
+  title
+  about
+}
+
+entity "content" as content {
+  *id : PK
+  --
+  profile_id : FK
+  game_id : FK
+  title
+  decription
+  data
+}
+
+entity "signature" as signature {
+  *id : PK
+  --
+  profile_id : FK
+  author_id : FK
+  signature
+  created_date
+}
+
+entity "achievement" as achievement {
+  *id : PK
+  --
+  game_id : FK
+  logo_id : FK
+  title
+  description
+}
+
+' Relationships
+profile ||--|| credential : "credential_id"
+profile ||--o| media : "pfp_id"
+media }o--|| game : "screenshots"
+review }o--|| profile : "profile_id"
+review }o--|| game : "game_id"
+purchase }o--|| credential : "credential_id"
+purchase }o--|| game : "game_id"
+game }o--|| studio : "game_studio"
+game }o--|| studio : "publisher"
+game }o--o{ tag : "game_tag"
+studio ||--o| media : "logo_id"
+content }o--|| profile : "profile_id"
+content }o--|| game : "game_id"
+signature }o--|| profile : "author_id"
+signature }o--|| profile : "profile_id"
+achievement }o--|| game : "game_id"
+achievement }o--|| profile
+@enduml
+```
+</details>
 
 _Примітка: Зв'язки __багато до багатьох__ у діаграмі не мають проміжних таблиць, однак при реалізації БД - обов'язкові_
