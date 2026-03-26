@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model achievement {
+  id                  Int                   @id @default(autoincrement())
+  game_id             Int
+  logo_id             Int?
+  title               String                @db.VarChar(32)
+  description         String?               @db.VarChar(255)
+  game                game                  @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  media               media?                @relation(fields: [logo_id], references: [id], onUpdate: NoAction)
+  profile_achievement profile_achievement[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model content {
+  id          Int     @id @default(autoincrement())
+  profile_id  Int
+  game_id     Int
+  title       String  @db.VarChar(32)
+  description String? @db.VarChar(256)
+  data        Bytes
+  game        game    @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profile     profile @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model credential {
+  id            Int        @id @default(autoincrement())
+  login         String     @unique @db.VarChar(12)
+  email         String     @unique @db.VarChar(256)
+  password_hash String     @db.VarChar(100)
+  profile       profile?
+  purchase      purchase[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model game {
+  id                               Int           @id @default(autoincrement())
+  studio_id                        Int
+  publisher_id                     Int
+  title                            String        @db.VarChar(32)
+  price                            Decimal?      @db.Money
+  data                             Bytes
+  description                      String?       @db.VarChar(255)
+  achievement                      achievement[]
+  content                          content[]
+  studio_game_publisher_idTostudio studio        @relation("game_publisher_idTostudio", fields: [publisher_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  studio_game_studio_idTostudio    studio        @relation("game_studio_idTostudio", fields: [studio_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  game_media                       game_media[]
+  game_tag                         game_tag[]
+  purchase                         purchase[]
+  review                           review[]
+}
+
+model game_media {
+  id       Int   @id @default(autoincrement())
+  game_id  Int   @default(autoincrement())
+  media_id Int   @default(autoincrement())
+  game     game  @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  media    media @relation(fields: [media_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model game_tag {
+  id      Int  @id @default(autoincrement())
+  game_id Int  @default(autoincrement())
+  tag_id  Int  @default(autoincrement())
+  game    game @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tag     tag  @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([game_id, tag_id])
+}
+
+model media {
+  id          Int           @id @default(autoincrement())
+  data        Bytes
+  achievement achievement[]
+  game_media  game_media[]
+  profile     profile[]
+  studio      studio[]
+}
+
+model profile {
+  id                                      Int                   @id @default(autoincrement())
+  credential_id                           Int                   @unique
+  pfp_id                                  Int?
+  name                                    String                @db.VarChar(32)
+  about                                   String?               @db.VarChar(256)
+  created_date                            DateTime              @default(dbgenerated("CURRENT_DATE")) @db.Date
+  content                                 content[]
+  credential                              credential            @relation(fields: [credential_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  media                                   media?                @relation(fields: [pfp_id], references: [id], onUpdate: NoAction)
+  profile_achievement                     profile_achievement[]
+  review                                  review[]
+  signature_signature_author_idToprofile  signature[]           @relation("signature_author_idToprofile")
+  signature_signature_profile_idToprofile signature[]           @relation("signature_profile_idToprofile")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model profile_achievement {
+  id             Int         @id @default(autoincrement())
+  profile_id     Int         @default(autoincrement())
+  achievement_id Int         @default(autoincrement())
+  achievement    achievement @relation(fields: [achievement_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profile        profile     @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([profile_id, achievement_id])
+}
+
+model purchase {
+  id            Int        @id @default(autoincrement())
+  credential_id Int
+  game_id       Int
+  price         Decimal    @db.Money
+  created_date  DateTime   @default(dbgenerated("CURRENT_DATE")) @db.Date
+  credential    credential @relation(fields: [credential_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  game          game       @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([credential_id, game_id], map: "unique_purchase")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model review {
+  id         Int     @id @default(autoincrement())
+  profile_id Int
+  game_id    Int
+  recommend  Boolean
+  words      String? @db.VarChar(255)
+  game       game    @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profile    profile @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([profile_id, game_id], map: "unique_review")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model signature {
+  id                                    Int      @id @default(autoincrement())
+  profile_id                            Int
+  author_id                             Int
+  signature                             String   @db.VarChar(256)
+  created_date                          DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  profile_signature_author_idToprofile  profile  @relation("signature_author_idToprofile", fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profile_signature_profile_idToprofile profile  @relation("signature_profile_idToprofile", fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model studio {
+  id                             Int     @id @default(autoincrement())
+  logo_id                        Int?
+  title                          String  @db.VarChar(32)
+  about                          String? @db.VarChar(256)
+  game_game_publisher_idTostudio game[]  @relation("game_publisher_idTostudio")
+  game_game_studio_idTostudio    game[]  @relation("game_studio_idTostudio")
+  media                          media?  @relation(fields: [logo_id], references: [id], onUpdate: NoAction)
+}
+
+model tag {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique @db.VarChar(10)
+  game_tag game_tag[]
+}
