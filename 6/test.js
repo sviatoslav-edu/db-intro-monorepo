@@ -1,5 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { PrismaPg } = require("@prisma/adapter-pg");
+const { PrismaClient } = require("@prisma/client");
+
+const adapter = new PrismaPg({ connectionString: "postgresql://postgres:admin@localhost:5432/postgres?schema=public" });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   await prisma.user.create({
